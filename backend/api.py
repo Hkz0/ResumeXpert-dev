@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import jsonify, request
+import google.generativeai as genai
 import pdfplumber
 import os
 
