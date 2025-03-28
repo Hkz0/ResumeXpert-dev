@@ -1,9 +1,15 @@
 from flask import Flask
 from flask import jsonify, request
+from dotenv import load_dotenv
+import google.generativeai as genai
 import pdfplumber
 import os
 
 app = Flask(__name__)
+load_dotenv()
+
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+genai.configure(api_key=GEMINI_KEY)
 
 # resume file location
 UPLOAD_FOLDER = "upload"
@@ -44,6 +50,22 @@ def extract_pdf(file_path):
     return text.strip()
                     
     
+# gemini test
+@app.route("/ai", methods=["POST"])
+def analyze():
+    try:
+        data = request.json
+        prompt = data.get("prompt", "")
+        
+        if not prompt:
+            return jsonify({"error": "prompt is required"}), 400
+        
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        return  jsonify({"response": response.text})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
  
  
