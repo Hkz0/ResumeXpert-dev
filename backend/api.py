@@ -1,19 +1,11 @@
 from flask import Flask
 from flask import jsonify, request
-from dotenv import load_dotenv
-import google.generativeai as genai
-import pdfplumber
-import os
+
+#from ai import analyze
+from fileparser import pdf_processing
 
 app = Flask(__name__)
-load_dotenv()
 
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_KEY)
-
-# resume file location
-UPLOAD_FOLDER = "upload"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route("/")
 def test():
     return "<h1>Test</h1>"
@@ -27,45 +19,24 @@ def upload_resume():
     
     file = request.files['file']
     
+    # pdf only
     if file and file.filename.endswith(".pdf"):
         
-        file_path = os.path.join (UPLOAD_FOLDER, file.filename)
-        file.save(file_path)
-        text = extract_pdf(file)
+        text = pdf_processing(file)
+        
         return jsonify({"filename": file.filename,
                         "content": text}), 200
     
     return jsonify({"error": "Upload failed"}), 400
         
 
-# parse pdf to text       
-def extract_pdf(file_path):
-    text = ""
-    with pdfplumber.open(file_path) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            
-            if page_text:
-                text += page_text + "\n"
-    return text.strip()
+
                     
     
 # gemini test
-@app.route("/ai", methods=["POST"])
-def analyze():
-    try:
-        data = request.json
-        prompt = data.get("prompt", "")
-        
-        if not prompt:
-            return jsonify({"error": "prompt is required"}), 400
-        
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(prompt)
-        return  jsonify({"response": response.text})
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#@app.route("/ai", methods=["POST"])
+#def geminiTest():
+#    return analyze()
     
  
  
