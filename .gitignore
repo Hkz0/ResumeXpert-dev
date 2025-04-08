@@ -1,3 +1,5 @@
-.venv
+
+.venv/ # python virtual enviroment folder
 upload
 backend/.env
+.venv

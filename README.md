@@ -25,8 +25,12 @@
 - SerpAPI
 
 ## Usage
-- Recommended to deploy with Python Virtual Environment
-- install all packages dependency with `pip`
+- Make a python enivorment with file name `.venv`
+```python
+python -m venv .venv
+```
+- activate it
+- then install all packages dependency with `pip`
 ```python
 pip install -r requirements.txt
 ```
