@@ -1,0 +1,131 @@
+swagger: "2.0"
+info:
+  description: "This is a simple API that allows users to upload a PDF file, extract text, and return the extracted content."
+  version: "1.0.0"
+  title: "PDF Upload API"
+  termsOfService: "http://example.com/terms/"
+  contact:
+    name: "Your Name"
+    email: "your-email@example.com"
+    url: "http://example.com"
+  license:
+    name: "MIT"
+    url: "http://opensource.org/licenses/MIT"
+host: "localhost:5000"
+basePath: "/"
+schemes:
+  - "http"
+tags:
+  - name: "PDF Processing"
+    description: "Operations related to PDF file upload and text extraction"
+  - name: "AI"
+    description: "AI-related operations (currently disabled)"
+paths:
+  /:
+    get:
+      summary: "Test endpoint"
+      description: "A simple test endpoint to verify the server is running."
+      tags:
+        - "PDF Processing"
+      responses:
+        200:
+          description: "A simple HTML test page"
+          schema:
+            type: "string"
+            example: "<h1>Test</h1>"
+
+  /upload:
+    post:
+      summary: "Upload a PDF and extract its text"
+      description: "This endpoint allows users to upload a PDF file and extract its text. Only PDF files are supported."
+      tags:
+        - "PDF Processing"
+      consumes:
+        - "multipart/form-data"
+      parameters:
+        - in: "formData"
+          name: "file"
+          type: "file"
+          description: "The PDF file to upload for text extraction"
+          required: true
+      responses:
+        200:
+          description: "Text extraction successful"
+          schema:
+            type: "object"
+            properties:
+              filename:
+                type: "string"
+                description: "The name of the uploaded file"
+                example: "example.pdf"
+              content:
+                type: "string"
+                description: "The extracted text from the PDF"
+                example: "This is the extracted content from the PDF file."
+        400:
+          description: "Bad request, file was not provided or incorrect format"
+          schema:
+            type: "object"
+            properties:
+              error:
+                type: "string"
+                example: "No file part"
+        415:
+          description: "Unsupported file type"
+          schema:
+            type: "object"
+            properties:
+              error:
+                type: "string"
+                example: "Upload failed - only PDF files are supported"
+  # Uncomment and expand this section if you plan to implement AI functionality
+  # /ai:
+  #   post:
+  #     summary: "Gemini AI test"
+  #     description: "This endpoint is for testing the Gemini AI system (currently disabled)"
+  #     tags:
+  #       - "AI"
+  #     responses:
+  #       200:
+  #         description: "AI analysis result"
+  #         schema:
+  #           type: "string"
+  #           example: "AI analysis result goes here"
+
+definitions:
+  # Response model for successful PDF upload
+  PdfResponse:
+    type: "object"
+    properties:
+      filename:
+        type: "string"
+        description: "The name of the uploaded file"
+        example: "example.pdf"
+      content:
+        type: "string"
+        description: "Extracted text from the PDF"
+        example: "Extracted content from the PDF will appear here."
+
+  # Error response model for cases like missing file or invalid file format
+  ErrorResponse:
+    type: "object"
+    properties:
+      error:
+        type: "string"
+        description: "A description of the error"
+        example: "No file part"
+
+  # File model to define the expected file input
+  File:
+    type: "file"
+    description: "PDF file to be uploaded for processing"
+    required: true
+
+  # Model for AI analysis result (if you implement AI in the future)
+  AiAnalysisResponse:
+    type: "object"
+    properties:
+      analysisResult:
+        type: "string"
+        description: "The result of AI analysis"
+        example: "AI has processed the document and generated insights."

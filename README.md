@@ -34,3 +34,8 @@ python -m venv .venv
 ```python
 pip install -r requirements.txt
 ```
+## Run
+- to run the flask app
+```python
+python api.py
+```

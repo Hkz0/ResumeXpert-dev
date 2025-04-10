@@ -1,10 +1,13 @@
 from flask import Flask
 from flask import jsonify, request
-
+from flasgger import Swagger
 #from ai import analyze
 from fileparser import pdf_processing
 
 app = Flask(__name__)
+
+#init swagger
+swagger = Swagger(app, template_file='swagger.yml')
 
 @app.route("/")
 def test():
