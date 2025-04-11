@@ -4,8 +4,7 @@ from flask import jsonify, request
 import os
 load_dotenv()
 
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_KEY)
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def analyze():
     try:

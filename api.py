@@ -2,8 +2,10 @@ from flask import Flask
 from flask import jsonify, request
 from flasgger import Swagger
 from flask_cors import CORS
-#from ai import analyze
+from ai import analyze
 from fileparser import pdf_processing
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -40,9 +42,9 @@ def upload_resume():
                     
     
 # gemini test
-#@app.route("/ai", methods=["POST"])
-#def geminiTest():
-#    return analyze()
+@app.route("/ai", methods=["POST"])
+def geminiTest():
+    return analyze()
     
  
  
