@@ -1,17 +1,19 @@
 from flask import Flask
 from flask import jsonify, request
 from flasgger import Swagger
+from flask_cors import CORS
 #from ai import analyze
 from fileparser import pdf_processing
 
 app = Flask(__name__)
+CORS(app)
 
 #init swagger
 swagger = Swagger(app, template_file='swagger.yml')
 
 @app.route("/")
 def test():
-    return "<h1>Test</h1>"
+    return "<h1>Online</h1>"
 
 # upload endpoint
 @app.route("/upload", methods=["POST"])
@@ -29,6 +31,7 @@ def upload_resume():
         
         return jsonify({"filename": file.filename,
                         "content": text}), 200
+        
     
     return jsonify({"error": "Upload failed"}), 400
         
