@@ -1,6 +1,7 @@
 import pymupdf
 import io
 from flask import jsonify, request
+from unidecode import unidecode
 
 
 def pdf_processing(file):
