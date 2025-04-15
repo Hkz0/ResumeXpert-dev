@@ -23,6 +23,9 @@
 - Flask
 - PyMuPDF
 - SerpAPI
+- Gemini AI
+- Swagger
+
 
 ## Usage
 - Make a python enivorment with file name `.venv`

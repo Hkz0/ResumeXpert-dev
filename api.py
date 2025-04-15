@@ -15,27 +15,38 @@ swagger = Swagger(app, template_file='swagger.yml')
 
 @app.route("/")
 def test():
-    return "<h1>Online</h1>"
+    return jsonify({"status" : "OK",
+                    "message" : "API Online"}), 200
 
 # upload endpoint
 @app.route("/upload", methods=["POST"])
-def upload_resume():
+def upload():
     
     if "file" not in request.files:
-        return jsonify({"error": "No file part"}), 400
+        return jsonify({"status" : "error",
+                        "message" : "no file"}), 400
+    
+    if not request.form.get("job_desc"):
+        return jsonify({"status" : "error",
+                        "message" : "no job_desc"}), 400
     
     file = request.files['file']
+    job_desc = request.form.get('job_desc')
     
     # pdf only
     if file and file.filename.endswith(".pdf"):
         
         text = pdf_processing(file)
         
-        return jsonify({"filename": file.filename,
+        return jsonify({"status" : "OK",
+                        "message" : "upload successfull",
+                        "filename": file.filename,
+                        "job description" : job_desc,
                         "content": text}), 200
         
     
-    return jsonify({"error": "Upload failed"}), 400
+    return jsonify({"status" : "error",
+                    "message" : "Upload failed"}), 400
         
 
 
