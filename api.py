@@ -39,10 +39,9 @@ def upload():
         text = pdf_processing(file)
         
         return jsonify({"status" : "OK",
-                        "message" : "upload successfull",
-                        "filename": file.filename,
-                        "job description" : job_desc,
-                        "content": text}), 200
+                        "message" : "upload success",
+                        "job_desc_text" : job_desc,
+                        "resume_text": text}), 200
         
     
     return jsonify({"status" : "error",
@@ -52,10 +51,21 @@ def upload():
 
                     
     
-# gemini test
-@app.route("/ai", methods=["POST"])
+# analyze endpoint
+@app.route("/analyze", methods=["POST"])
 def geminiTest():
-    return analyze()
+    
+    data = request.get_json()
+    resume_text = data.get('resume_text')
+    job_desc_text = data.get('job_desc_text')
+    
+    if not resume_text or not job_desc_text:
+        return jsonify({'status': 'error',
+                        'message': 'missing data'}), 400
+
+    
+    result = analyze(resume_text,job_desc_text)
+    return result
     
  
  
