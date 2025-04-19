@@ -38,10 +38,10 @@ def upload():
         
         text = pdf_processing(file)
         
-        return jsonify({"status" : "OK",
-                        "message" : "upload success",
-                        "job_desc_text" : job_desc,
-                        "resume_text": text}), 200
+        return jsonify({"job_desc_text" : job_desc,
+                        "resume_text"   : text}), 200
+        # return jsonify(text), 200
+
         
     
     return jsonify({"status" : "error",
