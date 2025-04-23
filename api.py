@@ -2,9 +2,10 @@ from flask import Flask
 from flask import jsonify, request
 from flasgger import Swagger
 from flask_cors import CORS
+
 from ai import analyze
 from fileparser import pdf_processing
-
+from jobs import job_listings
 
 
 app = Flask(__name__)
@@ -46,10 +47,7 @@ def upload():
     
     return jsonify({"status" : "error",
                     "message" : "Upload failed"}), 400
-        
-
-
-                    
+          
     
 # analyze endpoint
 @app.route("/analyze", methods=["POST"])
@@ -67,6 +65,12 @@ def geminiTest():
     result = analyze(resume_text,job_desc_text)
     return result
     
+
+# job matching endpoint
+@app.route("/job-matching", methods=["GET"])
+def job_matching():
+    job_result = job_listings("Cybersecurity", "Shah Alam")
+    return jsonify(job_result)
  
  
 if __name__ == "__main__":
