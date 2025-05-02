@@ -93,9 +93,28 @@ def analyze(resume_text,job_desc_text):
                     "issue": "string",
                     "suggestion": "string"
                 }}
-            ] or ["No issues found"]
+            ] or ["No issues found"],
+            "career_recommendations": {{
+                "best_match": {{
+                    "title": "Best Job Title",
+                    "reason": "Brief explanation why this is the top recommendation based on skills/experience"
+                }},
+                "other_careers": [
+                    {{
+                        "title": "Alternative Job Title",
+                        "reason": "Brief explanation why this role is also suitable"
+                    }},
+                    ...
+                ]
+            }}
         }}
 
+        Guidelines for career_recommendations:
+        - Select one "best_match" that fits the candidate most strongly.
+        - Then suggest 2-4 "other_careers" that are also good matches.
+        - **Prefer broadly recognized, high-demand job titles** (e.g., "Software Developer", "Marketing Specialist") over highly specific/niche titles unless the resume is extremely specialized.
+        - Keep explanations brief but meaningful.
+        
         Respond ONLY with valid JSON - no extra text.
         """
 

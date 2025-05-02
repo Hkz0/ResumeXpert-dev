@@ -1,18 +1,15 @@
 from flask import Flask
 from flask import jsonify, request
-from flasgger import Swagger
 from flask_cors import CORS
 
 from ai import analyze
 from fileparser import pdf_processing
-from jobs import job_listings
+from jobs import JSearch
 
 
 app = Flask(__name__)
 CORS(app)
 
-#init swagger
-swagger = Swagger(app, template_file='swagger.yml')
 
 @app.route("/")
 def test():
@@ -41,7 +38,6 @@ def upload():
         
         return jsonify({"job_desc_text" : job_desc,
                         "resume_text"   : text}), 200
-        # return jsonify(text), 200
 
         
     
@@ -51,7 +47,7 @@ def upload():
     
 # analyze endpoint
 @app.route("/analyze", methods=["POST"])
-def geminiTest():
+def geminiAnalyze():
     
     data = request.get_json()
     resume_text = data.get('resume_text')
@@ -67,9 +63,17 @@ def geminiTest():
     
 
 # job matching endpoint
-@app.route("/job-matching", methods=["GET"])
+@app.route("/job-matching", methods=["POST"])
 def job_matching():
-    job_result = job_listings("Cybersecurity", "Shah Alam")
+    
+    
+    job_title = request.form.get('job_title')
+    job_location = request.form.get('job_location')
+    job_result = JSearch(job_title, job_location)
+    
+    if not job_location or not job_title:
+        return jsonify({'status': 'error',
+                        'message': 'missing data'}), 400
     return jsonify(job_result)
  
  
