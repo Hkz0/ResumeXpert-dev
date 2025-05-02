@@ -31,7 +31,6 @@ def upload():
     file = request.files['file']
     job_desc = request.form.get('job_desc')
     
-    # pdf only
     if file and file.filename.endswith(".pdf"):
         
         text = pdf_processing(file)
@@ -39,8 +38,6 @@ def upload():
         return jsonify({"job_desc_text" : job_desc,
                         "resume_text"   : text}), 200
 
-        
-    
     return jsonify({"status" : "error",
                     "message" : "Upload failed"}), 400
           
@@ -66,7 +63,6 @@ def geminiAnalyze():
 @app.route("/job-matching", methods=["POST"])
 def job_matching():
     
-    
     job_title = request.form.get('job_title')
     job_location = request.form.get('job_location')
     job_result = JSearch(job_title, job_location)
@@ -74,6 +70,7 @@ def job_matching():
     if not job_location or not job_title:
         return jsonify({'status': 'error',
                         'message': 'missing data'}), 400
+        
     return jsonify(job_result)
  
  

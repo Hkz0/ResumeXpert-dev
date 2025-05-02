@@ -23,11 +23,8 @@ def JSearch (job_title : str, city : str):
     }
 
     response = requests.get(url, headers=headers, params=querystring)
-    
-    
     results = json_jobs_filter(response.json())
     
-
     return results
     
     
