@@ -56,22 +56,23 @@ def geminiAnalyze():
 
     
     result = analyze(resume_text,job_desc_text)
-    return result
+    return result, 200
     
 
 # job matching endpoint
 @app.route("/job-matching", methods=["POST"])
 def job_matching():
     
-    job_title = request.form.get('job_title')
-    job_location = request.form.get('job_location')
-    job_result = JSearch(job_title, job_location)
+    data = request.get_json()
+    job_title = data.get('job_title')
+    job_location = data.get('job_location')
     
-    if not job_location or not job_title:
+    if not job_title:
         return jsonify({'status': 'error',
-                        'message': 'missing data'}), 400
+                        'message': 'missing job_title'}), 400
         
-    return jsonify(job_result)
+    job_result = JSearch(job_title, job_location)
+    return jsonify(job_result), 200
  
  
 if __name__ == "__main__":
