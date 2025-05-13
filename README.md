@@ -6,7 +6,7 @@
 
 ### REST API Architecture
 - Independent backend architecture designed to use with a REST frontend client
-- API endpoint documentation soon
+- [API Documentation](API_docs.md)
 
 ### PDF Parsing
 - Resume file parsing with PyMuPDF
@@ -15,16 +15,15 @@
 - Gemini API
 
 ### Matching Job Listings
-- Try to find matching jobs from resume with Google jobs API (SerpAPI)
+- Try to find matching jobs from resume with Google jobs API (JSearch)
 
 
 
 ## Techologies
 - Flask
 - PyMuPDF
-- SerpAPI
+- JSearch
 - Gemini AI
-- Swagger
 
 
 ## Usage
