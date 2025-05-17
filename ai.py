@@ -83,3 +83,49 @@ def gemini_response_parse(text):
        print(f"Unexpected error: {str(e)}")
        return None
    
+def rank_resumes(resume_texts, job_desc_text):
+    try:
+        all_rankings = []
+        
+        for i, resume_text in enumerate(resume_texts):
+            prompt = f"""
+            Analyze this resume against the job description. Extract the candidate's name and provide a ranking score (1-100).
+
+            # Job Description:
+            {job_desc_text}
+
+            # Resume to Analyze:
+            {resume_text}
+
+            Provide a JSON response with the following structure:
+            {{
+                "resume_id": {i},
+                "candidate_name": "Extracted Name",
+                "score": 85,
+                "summary": "Brief summary of why this score was given"
+            }}
+
+            Guidelines:
+            - First extract the candidate's name from the resume (usually at the top)
+            - Score the resume from 1-100 based on relevance to the job description
+            - Keep summary concise but meaningful (2-3 sentences maximum)
+            - If name cannot be found, use "Unknown Candidate"
+
+            Respond ONLY with valid JSON - no extra text.
+            """
+
+            model = genai.GenerativeModel("gemini-2.0-flash")
+            response = model.generate_content(prompt)
+            result = gemini_response_parse(response.text)
+            
+            if result:
+                all_rankings.append(result)
+        
+        # Sort rankings by score in descending order
+        all_rankings.sort(key=lambda x: x.get('score', 0), reverse=True)
+        
+        return {"rankings": all_rankings}
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+   

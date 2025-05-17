@@ -2,7 +2,7 @@ from flask import Flask
 from flask import jsonify, request, session
 from flask_cors import CORS
 
-from ai import analyze
+from ai import analyze, rank_resumes
 from fileparser import pdf_processing
 from jobs import JSearch
 
@@ -166,7 +166,47 @@ def uploadRanking():
         "resumes": resume_texts
     }), 200
 
- 
+@app.route("/rank-resumes", methods=["POST"])
+def rank_resumes_endpoint():
+    if "files" not in request.files:
+        return jsonify({
+            "status": "error",
+            "message": "no files"
+        }), 400
+
+    if not request.form.get("job_desc"):
+        return jsonify({
+            "status": "error",
+            "message": "no job description"
+        }), 400
+
+    files = request.files.getlist("files")
+    job_desc_text = request.form.get("job_desc")
+    
+    resume_texts = []
+    filenames = []
+
+    for file in files:
+        if file and file.filename.endswith(".pdf"):
+            text = pdf_processing(file)
+            resume_texts.append(text)
+            filenames.append(file.filename)
+        else:
+            return jsonify({
+                "status": "error",
+                "message": f"{file.filename} is not a PDF"
+            }), 400
+    
+    # Get rankings from AI
+    rankings = rank_resumes(resume_texts, job_desc_text)
+    
+    # Add filenames back to the results
+    if rankings and 'rankings' in rankings:
+        for i, ranking in enumerate(rankings['rankings']):
+            ranking['filename'] = filenames[i]
+    
+    return jsonify(rankings), 200
+
 if __name__ == "__main__":
      app.run(host="0.0.0.0", debug=True)
      
