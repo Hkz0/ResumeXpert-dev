@@ -10,12 +10,17 @@ from jobs import JSearch
 from models import db, User
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 app = Flask(__name__)
 # sqli
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'secret'
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 CORS(app)
 
 db.init_app(app)
