@@ -74,6 +74,46 @@ def job_matching():
     job_result = JSearch(job_title, job_location)
     return jsonify(job_result), 200
  
+ # # # Ranking Endpoints # # #
+ 
+ # ranking upload
+@app.route("/upload-ranking", methods=["POST"])
+def uploadRanking():
+    if "files" not in request.files:
+        return jsonify({
+            "status": "error",
+            "message": "no files"
+        }), 400
+
+    if not request.form.get("job_desc"):
+        return jsonify({
+            "status": "error",
+            "message": "no job_desc"
+        }), 400
+
+    files = request.files.getlist("files")
+    job_desc = request.form.get("job_desc")
+
+    resume_texts = []
+
+    for file in files:
+        if file and file.filename.endswith(".pdf"):
+            text = pdf_processing(file)
+            resume_texts.append({
+                "filename": file.filename,
+                "text": text
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": f"{file.filename} is not a PDF"
+            }), 400
+
+    return jsonify({
+        "job_desc_text": job_desc,
+        "resumes": resume_texts
+    }), 200
+
  
 if __name__ == "__main__":
      app.run(host="0.0.0.0", debug=True)
