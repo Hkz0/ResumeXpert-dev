@@ -7,11 +7,12 @@ from fileparser import pdf_processing
 from jobs import JSearch
 
 #db
-from models import db, User
+from models import db, User, Job, Ranking
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -21,8 +22,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
-CORS(app)
-
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
+CORS(app, supports_credentials=True, origins=['http://127.0.0.1:5500', 'http://localhost:5500', 'http://localhost:5000', 'https://resumexpert.onrender.com'])
 db.init_app(app)
 
 with app.app_context():
@@ -62,6 +64,13 @@ def login():
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logged out'})
+
+@app.route('/api/check-session')
+def check_session():
+    if 'user_id' in session:
+        return jsonify({'loggedIn': True, 'username': session['username']}), 200
+    return jsonify({'loggedIn': False}), 200
+
 
 @app.route("/")
 def test():
@@ -127,61 +136,90 @@ def job_matching():
     return jsonify(job_result), 200
  
  # # # Ranking Endpoints # # #
- 
- # ranking upload
-@app.route("/upload-ranking", methods=["POST"])
-def uploadRanking():
-    if "files" not in request.files:
+
+# Create new job position
+@app.route("/api/jobs", methods=["POST"])
+def create_job():
+    if 'user_id' not in session:
         return jsonify({
             "status": "error",
-            "message": "no files"
-        }), 400
+            "message": "Authentication required"
+        }), 401
 
-    if not request.form.get("job_desc"):
+    data = request.get_json()
+    if not data or not data.get('title') or not data.get('description'):
         return jsonify({
             "status": "error",
-            "message": "no job_desc"
+            "message": "Missing job title or description"
         }), 400
 
-    files = request.files.getlist("files")
-    job_desc = request.form.get("job_desc")
-
-    resume_texts = []
-
-    for file in files:
-        if file and file.filename.endswith(".pdf"):
-            text = pdf_processing(file)
-            resume_texts.append({
-                "filename": file.filename,
-                "text": text
-            })
-        else:
-            return jsonify({
-                "status": "error",
-                "message": f"{file.filename} is not a PDF"
-            }), 400
+    new_job = Job(
+        title=data['title'],
+        description=data['description'],
+        recruiter_id=session['user_id']
+    )
+    
+    db.session.add(new_job)
+    db.session.commit()
 
     return jsonify({
-        "job_desc_text": job_desc,
-        "resumes": resume_texts
+        "status": "success",
+        "message": "Job created successfully",
+        "job_id": new_job.id
+    }), 201
+
+# Get all jobs for logged-in recruiter
+@app.route("/api/jobs", methods=["GET"])
+def get_jobs():
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Authentication required"
+        }), 401
+
+    jobs = Job.query.filter_by(recruiter_id=session['user_id']).all()
+    return jsonify({
+        "jobs": [{
+            "id": job.id,
+            "title": job.title,
+            "description": job.description,
+            "created_at": job.created_at.isoformat(),
+            "rankings_count": len(job.rankings)
+        } for job in jobs]
     }), 200
 
+# Modified rank-resumes endpoint to save rankings
 @app.route("/rank-resumes", methods=["POST"])
 def rank_resumes_endpoint():
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Authentication required"
+        }), 401
+
     if "files" not in request.files:
         return jsonify({
             "status": "error",
             "message": "no files"
         }), 400
 
-    if not request.form.get("job_desc"):
+    job_id = request.form.get("job_id")
+    if not job_id:
         return jsonify({
             "status": "error",
-            "message": "no job description"
+            "message": "no job_id provided"
         }), 400
 
+    # Verify job belongs to user
+    job = Job.query.filter_by(id=job_id, recruiter_id=session['user_id']).first()
+    if not job:
+        return jsonify({
+            "status": "error",
+            "message": "Job not found or unauthorized"
+        }), 404
+
     files = request.files.getlist("files")
-    job_desc_text = request.form.get("job_desc")
+    job_desc_text = job.description
     
     resume_texts = []
     filenames = []
@@ -200,12 +238,94 @@ def rank_resumes_endpoint():
     # Get rankings from AI
     rankings = rank_resumes(resume_texts, job_desc_text)
     
-    # Add filenames back to the results
+    # Save rankings to database
     if rankings and 'rankings' in rankings:
         for i, ranking in enumerate(rankings['rankings']):
-            ranking['filename'] = filenames[i]
-    
-    return jsonify(rankings), 200
+            new_ranking = Ranking(
+                job_id=job_id,
+                candidate_name=ranking.get('candidate_name'),
+                score=ranking.get('score'),
+                summary=ranking.get('summary'),
+                filename=filenames[i]
+            )
+            db.session.add(new_ranking)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Resumes uploaded and ranked successfully",
+            "job_id": job_id,
+            "files_processed": len(filenames)
+        }), 200
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Failed to process rankings"
+        }), 500
+
+# Get rankings for a specific job
+@app.route("/api/jobs/<int:job_id>/rankings", methods=["GET"])
+def get_job_rankings(job_id):
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Authentication required"
+        }), 401
+
+    # Verify job belongs to user
+    job = Job.query.filter_by(id=job_id, recruiter_id=session['user_id']).first()
+    if not job:
+        return jsonify({
+            "status": "error",
+            "message": "Job not found or unauthorized"
+        }), 404
+
+    rankings = Ranking.query.filter_by(job_id=job_id).order_by(Ranking.score.desc()).all()
+    return jsonify({
+        "job_title": job.title,
+        "rankings": [{
+            "id": r.id,
+            "candidate_name": r.candidate_name,
+            "score": r.score,
+            "summary": r.summary,
+            "filename": r.filename,
+            "created_at": r.created_at.isoformat()
+        } for r in rankings]
+    }), 200
+
+# Delete a specific ranking
+@app.route("/api/jobs/<int:job_id>/rankings/<int:ranking_id>", methods=["DELETE"])
+def delete_ranking(job_id, ranking_id):
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Authentication required"
+        }), 401
+
+    # Verify job belongs to user
+    job = Job.query.filter_by(id=job_id, recruiter_id=session['user_id']).first()
+    if not job:
+        return jsonify({
+            "status": "error",
+            "message": "Job not found or unauthorized"
+        }), 404
+
+    # Find and delete the ranking
+    ranking = Ranking.query.filter_by(id=ranking_id, job_id=job_id).first()
+    if not ranking:
+        return jsonify({
+            "status": "error",
+            "message": "Ranking not found"
+        }), 404
+
+    db.session.delete(ranking)
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Candidate ranking deleted successfully"
+    }), 200
 
 if __name__ == "__main__":
      app.run(host="0.0.0.0", debug=True)
