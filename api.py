@@ -188,9 +188,9 @@ def get_jobs():
         } for job in jobs]
     }), 200
 
-# Modified rank-resumes endpoint to save rankings
-@app.route("/rank-resumes", methods=["POST"])
-def rank_resumes_endpoint():
+# Modified rank-resumes endpoint to get job_id from URL
+@app.route("/rank-resumes/<int:job_id>", methods=["POST"])
+def rank_resumes_endpoint(job_id):
     if 'user_id' not in session:
         return jsonify({
             "status": "error",
@@ -201,13 +201,6 @@ def rank_resumes_endpoint():
         return jsonify({
             "status": "error",
             "message": "no files"
-        }), 400
-
-    job_id = request.form.get("job_id")
-    if not job_id:
-        return jsonify({
-            "status": "error",
-            "message": "no job_id provided"
         }), 400
 
     # Verify job belongs to user
