@@ -32,6 +32,7 @@ def JSearch (job_title : str, city : str):
 def json_jobs_filter(results):
     return [
         {
+            "employer_logo": job.get("employer_logo"),
             "title": job.get("job_title"),
             "location": job.get("job_location"),
             "company": job.get("employer_name"),
