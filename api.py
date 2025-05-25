@@ -320,6 +320,36 @@ def delete_ranking(job_id, ranking_id):
         "message": "Candidate ranking deleted successfully"
     }), 200
 
+# Delete a specific job
+@app.route("/api/jobs/<int:job_id>", methods=["DELETE"])
+def delete_job(job_id):
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "error",
+            "message": "Authentication required"
+        }), 401
+
+    # Verify job belongs to user
+    job = Job.query.filter_by(id=job_id, recruiter_id=session['user_id']).first()
+    if not job:
+        return jsonify({
+            "status": "error",
+            "message": "Job not found or unauthorized"
+        }), 404
+
+    # Optionally delete associated rankings
+    rankings = Ranking.query.filter_by(job_id=job_id).all()
+    for ranking in rankings:
+        db.session.delete(ranking)
+
+    db.session.delete(job)
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Job and associated rankings deleted successfully"
+    }), 200
+
 if __name__ == "__main__":
      app.run(host="0.0.0.0", debug=True)
      
