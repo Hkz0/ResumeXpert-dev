@@ -36,7 +36,7 @@ def json_jobs_filter(results):
             "title": job.get("job_title"),
             "location": job.get("job_location"),
             "company": job.get("employer_name"),
-            "job_posted": job.get("job_posted_human_readable"),
+            "job_posted": job.get("job_posted_at"),
             "apply_options": job.get("apply_options", [])
         }
         for job in results.get("data", [])
