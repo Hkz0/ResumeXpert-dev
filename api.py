@@ -24,7 +24,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
-CORS(app, supports_credentials=True, origins=['http://localhost:3000', 'http://localhost:5500', 'http://localhost:5000', 'https://resumexpert.onrender.com', 'http://localhost:5173'])
+CORS(app, supports_credentials=True, origins=[
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://localhost:5000',
+    'https://resumexpert.onrender.com',
+    'http://localhost:5173',
+    'https://resumexpert-ai.vercel.app'
+    ])
 db.init_app(app)
 
 with app.app_context():
