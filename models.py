@@ -25,3 +25,10 @@ class Ranking(db.Model):
     summary = db.Column(db.Text, nullable=False)
     filename = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class JobSearchCache(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_title = db.Column(db.String(200), nullable=False)
+    job_location = db.Column(db.String(200), nullable=True)
+    result_json = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

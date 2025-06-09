@@ -7,12 +7,12 @@ from fileparser import pdf_processing
 from jobs import JSearch
 
 #db
-from models import db, User, Job, Ranking
+from models import db, User, Job, Ranking, JobSearchCache
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -130,7 +130,6 @@ def geminiAnalyze():
 # job matching endpoint
 @app.route("/job-matching", methods=["POST"])
 def job_matching():
-    
     data = request.get_json()
     job_title = data.get('job_title')
     job_location = data.get('job_location')
@@ -138,8 +137,27 @@ def job_matching():
     if not job_title:
         return jsonify({'status': 'error',
                         'message': 'missing job_title'}), 400
-        
+
+    # Check cache for recent result (less than 4 days old)
+    four_days_ago = datetime.utcnow() - timedelta(days=4)
+    cache_query = JobSearchCache.query.filter_by(job_title=job_title, job_location=job_location).order_by(JobSearchCache.created_at.desc()).first()
+    if cache_query and cache_query.created_at > four_days_ago:
+        # Return cached result
+        import json
+        return jsonify(json.loads(cache_query.result_json)), 200
+
+    # Otherwise, fetch from JSearch
     job_result = JSearch(job_title, job_location)
+    # Store in cache
+    import json
+    new_cache = JobSearchCache(
+        job_title=job_title,
+        job_location=job_location,
+        result_json=json.dumps(job_result),
+        created_at=datetime.utcnow()
+    )
+    db.session.add(new_cache)
+    db.session.commit()
     return jsonify(job_result), 200
  
  # # # Ranking Endpoints # # #
