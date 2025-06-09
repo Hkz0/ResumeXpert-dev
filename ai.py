@@ -83,11 +83,12 @@ def gemini_response_parse(text):
        print(f"Unexpected error: {str(e)}")
        return None
    
-def rank_resumes(resume_texts, job_desc_text):
+def rank_resumes(resume_texts, job_desc_text, filenames=None):
     try:
         all_rankings = []
-        
-        for i, resume_text in enumerate(resume_texts):
+        if filenames is None:
+            filenames = [f"resume_{i}.pdf" for i in range(len(resume_texts))]
+        for i, (resume_text, filename) in enumerate(zip(resume_texts, filenames)):
             prompt = f"""
             Analyze this resume against the job description. Extract the candidate's name and provide a ranking score (1-100).
 
@@ -97,9 +98,12 @@ def rank_resumes(resume_texts, job_desc_text):
             # Resume to Analyze:
             {resume_text}
 
+            The filename for this resume is: {filename}
+
             Provide a JSON response with the following structure:
             {{
                 "resume_id": {i},
+                "filename": "{filename}",
                 "candidate_name": "Extracted Name",
                 "score": 85,
                 "summary": "Brief summary of why this score was given"
@@ -110,6 +114,7 @@ def rank_resumes(resume_texts, job_desc_text):
             - Score the resume from 1-100 based on relevance to the job description
             - Keep summary concise but meaningful (2-3 sentences maximum)
             - If name cannot be found, use "Unknown Candidate"
+            - Always include the filename field in your response, matching the one provided above
 
             Respond ONLY with valid JSON - no extra text.
             """

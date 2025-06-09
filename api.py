@@ -253,21 +253,24 @@ def rank_resumes_endpoint(job_id):
                 "message": f"{file.filename} is not a PDF"
             }), 400
     
-    # Get rankings from AI
-    rankings = rank_resumes(resume_texts, job_desc_text)
+    # Get rankings from AI, passing filenames
+    rankings = rank_resumes(resume_texts, job_desc_text, filenames)
     
-    # Save rankings to database
+    # Save rankings to database, matching by filename
     if rankings and 'rankings' in rankings:
-        for i, ranking in enumerate(rankings['rankings']):
-            new_ranking = Ranking(
-                job_id=job_id,
-                candidate_name=ranking.get('candidate_name'),
-                score=ranking.get('score'),
-                summary=ranking.get('summary'),
-                filename=filenames[i]
-            )
-            db.session.add(new_ranking)
-        
+        filename_to_index = {fn: i for i, fn in enumerate(filenames)}
+        for ranking in rankings['rankings']:
+            filename = ranking.get('filename')
+            # Only save if filename is in uploaded files
+            if filename in filename_to_index:
+                new_ranking = Ranking(
+                    job_id=job_id,
+                    candidate_name=ranking.get('candidate_name'),
+                    score=ranking.get('score'),
+                    summary=ranking.get('summary'),
+                    filename=filename
+                )
+                db.session.add(new_ranking)
         db.session.commit()
         
         return jsonify({
