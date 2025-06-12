@@ -30,7 +30,9 @@ CORS(app, supports_credentials=True, origins=[
     'http://localhost:5000',
     'https://resumexpert.onrender.com',
     'http://localhost:5173',
-    'https://resumexpert-ai.vercel.app'
+    'https://resumexpert-ai.vercel.app',
+    'https://resumexpert.my',
+    'https://www.resumexpert.my'
     ])
 db.init_app(app)
 
